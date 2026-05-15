@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+}
+
+@layer utilities {
+  .glass-border {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .radar-sweep {
+    background: conic-gradient(from 0deg, transparent 0%, rgba(77, 163, 255, 0.1) 50%, transparent 100%);
+  }
+}
+
+/* ── Animations ── */
+@keyframes radar-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-gentle {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.2;
+  }
+
+  100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+}
+
+.animate-radar-rotate {
+  animation: radar-rotate 12s linear infinite;
+}
+
+.animate-float {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.5s ease-in-out infinite;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Leaflet Popup & Tooltip overrides — MUST be outside @layer for specificity */
+.leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+
+.leaflet-popup-tip {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+}
+
+.leaflet-popup-close-button {
+  display: none !important;
+}
+
+.leaflet-tooltip.custom-tooltip {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.leaflet-tooltip-top.custom-tooltip::before,
+.leaflet-tooltip-bottom.custom-tooltip::before,
+.leaflet-tooltip-left.custom-tooltip::before,
+.leaflet-tooltip-right.custom-tooltip::before {
+  display: none !important;
+}

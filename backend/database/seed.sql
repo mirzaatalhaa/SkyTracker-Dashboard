@@ -1,0 +1,26 @@
+-- Seed some common airlines flying into COK
+INSERT INTO airlines (iata_code, name, country) VALUES
+  ('6E', 'IndiGo', 'India'),
+  ('AI', 'Air India', 'India'),
+  ('IX', 'Air India Express', 'India'),
+  ('UK', 'Vistara', 'India'),
+  ('SG', 'SpiceJet', 'India'),
+  ('I5', 'AirAsia India', 'India'),
+  ('QP', 'Akasa Air', 'India'),
+  ('EK', 'Emirates', 'UAE'),
+  ('EY', 'Etihad Airways', 'UAE'),
+  ('FZ', 'flydubai', 'UAE'),
+  ('G9', 'Air Arabia', 'UAE'),
+  ('QR', 'Qatar Airways', 'Qatar'),
+  ('WY', 'Oman Air', 'Oman'),
+  ('J9', 'Jazeera Airways', 'Kuwait'),
+  ('KU', 'Kuwait Airways', 'Kuwait'),
+  ('SV', 'Saudia', 'Saudi Arabia'),
+  ('SQ', 'Singapore Airlines', 'Singapore'),
+  ('MH', 'Malaysia Airlines', 'Malaysia'),
+  ('AK', 'AirAsia', 'Malaysia'),
+  ('OD', 'Malindo Air', 'Malaysia'),
+  ('TG', 'Thai Airways', 'Thailand'),
+  ('FD', 'Thai AirAsia', 'Thailand'),
+  ('UL', 'SriLankan Airlines', 'Sri Lanka')
+ON CONFLICT (iata_code) DO NOTHING;
