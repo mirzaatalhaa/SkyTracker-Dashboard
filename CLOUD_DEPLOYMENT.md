@@ -8,19 +8,19 @@ SkyTracker has been deployed to a live AWS cloud environment, transitioning from
 
 ```
                         ┌─────────────────────────────────────────────┐
-                        │           AWS EC2 — Ubuntu Server            │
+                        │           AWS EC2 — Ubuntu Server           │  
                         │                                             │
-   Internet             │   ┌─────────────┐     ┌─────────────────┐  │
-   ──────────────────►  │   │  Frontend   │     │    Backend      │  │
-   HTTP :80             │   │  (Nginx)    │────►│  (Node/Express) │  │
-                        │   │  React SPA  │     │   Port 3001     │  │
-                        │   └─────────────┘     └────────┬────────┘  │
+   Internet             │   ┌─────────────┐     ┌─────────────────┐   │
+   ──────────────────►  │   │  Frontend   │     │    Backend      │   │
+   HTTP :80             │   │  (Nginx)    │────►│  (Node/Express) │   │
+                        │   │  React SPA  │     │   Port 3001     │   │
+                        │   └─────────────┘     └────────┬────────┘   │
                         │                                │            │
-                        │                       ┌────────▼────────┐  │
-                        │                       │   PostgreSQL    │  │
-                        │                       │   Port 5432     │  │
-                        │                       │  [Volume Mount] │  │
-                        │                       └─────────────────┘  │
+                        │                       ┌────────▼────────┐   │
+                        │                       │   PostgreSQL    │   │
+                        │                       │   Port 5432     │   │
+                        │                       │  [Volume Mount] │   │
+                        │                       └─────────────────┘   │
                         │                                             │
                         │         Docker Bridge Network               │
                         └─────────────────────────────────────────────┘
