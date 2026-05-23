@@ -11,7 +11,7 @@ const formatTime = (timeStr) => {
 };
 
 const KochiTrafficPanel = ({ data, visible, isMobile = false }) => {
-  const { arrivals, departures, total, recentArrivals, recentDepartures, loading, error, lastUpdated, isLiveFallback } = data;
+  const { arrivals, departures, total, recentArrivals, recentDepartures, loading, error, lastUpdated } = data;
 
   // Mobile: fixed top-right below header
   // Desktop: vertically centered on right edge
@@ -51,7 +51,9 @@ const KochiTrafficPanel = ({ data, visible, isMobile = false }) => {
               </span>
             </div>
             <div className="min-w-0">
-              <div className="text-sky-300 font-headline font-bold text-xs tracking-tight leading-none">COK Traffic</div>
+              <div className="text-sky-300 font-headline font-bold text-xs tracking-tight leading-none">
+                COK Traffic
+              </div>
               <div className="text-slate-500 text-[8px] uppercase tracking-[0.2em] mt-0.5">
                 Today's Flights
               </div>
@@ -62,24 +64,19 @@ const KochiTrafficPanel = ({ data, visible, isMobile = false }) => {
         {/* Content body (Unconstrained) */}
         <div>
 
-          {/* Loading / Error */}
-          {loading && !arrivals && !departures ? (
+          {/* Loading */}
+          {loading && !arrivals && !departures && !error ? (
             <div className="px-4 py-6 text-center">
               <div className="w-5 h-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-2" />
               <div className="text-[9px] text-slate-500 uppercase tracking-widest">Loading data...</div>
             </div>
-          ) : error && !arrivals && !departures ? (
-            <div className="px-4 py-4 text-center">
-              <span className="material-symbols-outlined text-amber-400/60 text-lg mb-1 block">warning</span>
-              <div className="text-[9px] text-slate-500 uppercase tracking-widest">{error}</div>
-            </div>
           ) : (
             <>
-              {/* Inline error banner when showing stale data */}
-              {error && (arrivals || departures) ? (
-                <div className="mx-3 mt-3 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center gap-1.5">
+              {/* Inline error banner when showing stale/failed data */}
+              {error ? (
+                <div className="w-full py-2 bg-amber-500/10 border-b border-white/5 flex items-center justify-center gap-1.5">
                   <span className="material-symbols-outlined text-amber-400 text-xs">info</span>
-                  <span className="text-[8px] text-amber-400/80 uppercase tracking-wider">{error}</span>
+                  <span className="text-[8px] text-amber-400/80 uppercase tracking-wider font-semibold">{error}</span>
                 </div>
               ) : null}
 
@@ -118,8 +115,8 @@ const KochiTrafficPanel = ({ data, visible, isMobile = false }) => {
                 </div>
 
                 {/* Total */}
-                <div className="mt-2 bg-white/[0.03] rounded-xl px-3 py-2 border border-white/5 flex items-center justify-between">
-                  <span className="text-[9px] text-slate-500 uppercase tracking-widest font-medium">Total</span>
+                <div className="mt-2 bg-white/[0.03] rounded-xl px-4 py-1.5 border border-white/5 flex items-center justify-center gap-2 w-fit mx-auto">
+                  <span className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold">Total</span>
                   <span className="text-sm font-headline font-bold text-on-surface tabular-nums">{total}</span>
                 </div>
               </div>

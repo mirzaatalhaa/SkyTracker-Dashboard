@@ -15,6 +15,11 @@ app.use(cors()); // Allow all origins for dev, restrict in production later
 app.use(express.json());
 app.use(morgan('dev')); // HTTP request logging
 
+// Health check endpoint (GET /health) returning {"status": "ok"}
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Routes
 app.use('/api/v1', apiRoutes);
 
@@ -27,6 +32,7 @@ app.use((err, req, res, next) => {
     status: 'error',
     error: {
       message: err.message || 'Internal Server Error',
+      code: err.code || null
     }
   });
 });
@@ -34,7 +40,7 @@ app.use((err, req, res, next) => {
 // Start Server
 // We start the scheduler INSIDE the listen callback to guarantee the server is
 // fully bound and the database pool is established before the first job fires.
-app.listen(config.port, () => {
+app.listen(config.port, '0.0.0.0', () => {
   console.log(`[server] SkyTracker backend running in ${config.nodeEnv} mode on port ${config.port}`);
   startScheduler();
 });

@@ -148,9 +148,7 @@ export const AnalyticsDashboard = ({ visible, isMobile, activeTab }) => {
       </div>
 
       {/* ── Footer ── */}
-      <div className="text-[9px] text-slate-700 text-center py-2 bg-white/[0.01] border-t border-white/5 uppercase tracking-widest flex-shrink-0">
-        Autonomous collection · 2 min intervals
-      </div>
+     
 
       <style>{`@keyframes tabFadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
     </aside>

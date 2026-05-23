@@ -212,6 +212,14 @@ function App() {
       <KochiTrafficPanel data={kochiTraffic} visible={trafficPanelVisible} isMobile={isMobile} />
 
       {/* ── Analytics Dashboard ── */}
+      {/* Invisible backdrop — closes panel on outside click */}
+      {analyticsPanelVisible && (
+        <div
+          className="fixed inset-0 z-39"
+          style={{ zIndex: 39 }}
+          onClick={() => setActiveAnalyticsTab(null)}
+        />
+      )}
       <AnalyticsDashboard visible={analyticsPanelVisible} isMobile={isMobile} activeTab={activeAnalyticsTab || 'overview'} />
 
       {/* ── Mobile sidebar backdrop ── */}
@@ -322,7 +330,7 @@ function App() {
             </div>
             <div>
               <div className="text-[10px] font-headline font-bold text-primary-fixed-dim">COK Airspace</div>
-              <div className="text-[9px] text-slate-500 uppercase tracking-wider">50 km zone • Monitoring</div>
+              <div className="text-[9px] text-slate-500 uppercase tracking-wider">50 km zone</div>
             </div>
           </div>
         </div>
