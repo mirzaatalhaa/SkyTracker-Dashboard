@@ -223,18 +223,14 @@ function App() {
       )}
 
       {/* ── Header ── */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex justify-center items-center gap-3 sm:gap-4 px-4 sm:px-8 py-2.5 sm:py-3 rounded-full mt-3 mx-auto w-fit bg-white/[0.07] backdrop-blur-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.4)] font-manrope">
-        <div className="relative flex items-center gap-2">
-          <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-primary/40 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(162,201,255,0.6)] animate-pulse" />
-          </div>
-          <span className="text-base sm:text-xl font-bold tracking-tighter text-white">SkyTrack</span>
+      <header className="fixed top-5 left-0 right-0 z-50 flex justify-center items-center gap-3 mx-auto w-fit font-manrope select-none">
+        <div className="logo-icon-wrap">
+          <span
+            className="material-symbols-outlined text-2xl sm:text-3xl text-primary drop-shadow-[0_0_8px_rgba(162,201,255,0.4)]"
+            style={{ fontVariationSettings: "'FILL' 1", transform: 'rotate(-45deg)' }}
+          >flight</span>
         </div>
-        <div className="h-4 w-px bg-white/10" />
-        <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] animate-pulse" />
-          <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-emerald-400/80 font-medium">Live</span>
-        </div>
+        <span className="logo-text-gradient text-2xl sm:text-3xl font-extrabold tracking-tight">SkyTrack</span>
       </header>
 
       {/* ── Sidebar ── */}
@@ -369,10 +365,6 @@ function App() {
             <div>
               <h2 className="text-2xl font-headline font-extrabold text-primary-fixed-dim leading-none">{selectedFlight?.callsign || 'UNKNOWN'} - {selectedFlight?.type || ''}</h2>
               <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">{selectedFlight?.country || 'NA'}</p>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/20 uppercase">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Airborne
             </div>
           </div>
 

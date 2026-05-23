@@ -14,7 +14,7 @@ const getPlaneHtml = (flight, isSelected) => {
   const color = isSelected ? '#a2c9ff' : '#c3cad5';
   const glow = isSelected ? 'filter: drop-shadow(0 0 6px rgba(162,201,255,0.7));' : '';
 
-  return `<div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+  return `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="${color}" style="transform:rotate(${true_track}deg);${glow}">
       <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
     </svg>
@@ -25,8 +25,8 @@ const createIcon = (flight, isSelected) => {
   return L.divIcon({
     html: getPlaneHtml(flight, isSelected),
     className: '',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
   });
 };
 
