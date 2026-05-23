@@ -45,6 +45,54 @@ const MapController = ({ selectedFlight, setBounds }) => {
   return null;
 };
 
+const getAirlineFromCallsign = (callsign) => {
+  if (!callsign) return null;
+  const cleanCallsign = callsign.trim().toUpperCase();
+  
+  const airlineMap = {
+    'AIC': 'Air India',
+    'AXB': 'Air India Express',
+    'IAD': 'Air India Express',
+    'IGO': 'IndiGo',
+    'AKJ': 'Akasa Air',
+    'SEJ': 'SpiceJet',
+    'LLR': 'Alliance Air',
+    'GOY': 'Fly91',
+    'UAE': 'Emirates',
+    'ETD': 'Etihad Airways',
+    'QTR': 'Qatar Airways',
+    'FDB': 'Flydubai',
+    'ABY': 'Air Arabia',
+    'ADY': 'Air Arabia Abu Dhabi',
+    'OMA': 'Oman Air',
+    'GFA': 'Gulf Air',
+    'KAC': 'Kuwait Airways',
+    'SVA': 'Saudia',
+    'OMS': 'SalamAir',
+    'JZR': 'Jazeera Airways',
+    'SIA': 'Singapore Airlines',
+    'TGW': 'Scoot',
+    'THA': 'Thai Airways',
+    'AIQ': 'Thai AirAsia',
+    'TLM': 'Thai Lion Air',
+    'MXD': 'Batik Air Malaysia',
+    'MAS': 'Malaysia Airlines',
+    'VJC': 'VietJet Air',
+    'ALK': 'SriLankan Airlines',
+    'AXM': 'AirAsia',
+    'VIR': 'Virgin Atlantic',
+    'DLH': 'Lufthansa',
+    'KLM': 'KLM',
+  };
+
+  for (const [prefix, name] of Object.entries(airlineMap)) {
+    if (cleanCallsign.startsWith(prefix)) {
+      return name;
+    }
+  }
+  return null;
+};
+
 function App() {
   const { flights, setBounds } = useOpenSky();
   const weather = useWeather();
@@ -372,6 +420,12 @@ function App() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-2xl font-headline font-extrabold text-primary-fixed-dim leading-none">{selectedFlight?.callsign || 'UNKNOWN'} - {selectedFlight?.type || ''}</h2>
+              {(() => {
+                const airline = getAirlineFromCallsign(selectedFlight?.callsign);
+                return airline ? (
+                  <p className="text-[11px] font-bold text-sky-400 uppercase tracking-widest mt-1.5">{airline}</p>
+                ) : null;
+              })()}
               <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">{selectedFlight?.country || 'NA'}</p>
             </div>
           </div>
