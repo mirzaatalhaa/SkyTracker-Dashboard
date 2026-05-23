@@ -354,8 +354,8 @@ function App() {
 
       {/* ── Flight detail panel ── */}
       <main className={`fixed z-40 font-inter transition-all duration-500 ${isMobile
-          ? 'bottom-20 left-3 right-3'
-          : 'bottom-14 right-6 w-80'
+        ? 'bottom-20 left-3 right-3'
+        : 'bottom-14 right-6 w-80'
         } ${selectedFlight ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
         <div className="bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col pointer-events-auto relative overflow-hidden">
           {/* Accent line */}
@@ -454,22 +454,19 @@ function App() {
       <footer className="fixed bottom-0 w-full z-50 flex justify-between items-center px-4 sm:px-8 py-2 sm:py-2.5 bg-white/[0.03] backdrop-blur-xl border-t border-white/5 font-inter text-[9px] sm:text-[10px] tracking-widest uppercase pointer-events-none">
         <div className="flex items-center gap-3 sm:gap-4 pointer-events-auto">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)] animate-pulse" />
-            <span className="text-emerald-400/80">Online</span>
+
+
           </div>
-          <div className="h-3 w-px bg-white/10" />
+
           <span className="text-slate-500">
-            <span className="text-on-surface font-medium">{flights.length}</span> flights
+            <span className="text-on-surface font-medium">{flights.length}</span> flight(s)
             {visibleCount < flights.length && <span className="text-slate-600"> • {visibleCount} shown</span>}
           </span>
         </div>
         <div className="flex items-center gap-3 sm:gap-4 pointer-events-auto">
           <span className="text-slate-600 hidden sm:block">{new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })}</span>
-          <div className="h-3 w-px bg-white/10 hidden sm:block" />
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_5px_#a2c9ff] animate-pulse" />
-            <span className="text-on-surface/70">Data Sync</span>
-          </div>
+
+
         </div>
       </footer>
     </>
