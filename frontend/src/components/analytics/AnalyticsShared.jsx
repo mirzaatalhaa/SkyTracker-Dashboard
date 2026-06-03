@@ -13,21 +13,21 @@ import React from 'react';
 //   always lead with KPI strips.
 // ─────────────────────────────────────────────────────────────────────────────
 export const AnalyticsMetricCard = ({ icon, label, value, sub, loading, error, accentColor = 'text-primary' }) => (
-  <div className="bg-white/[0.04] rounded-xl border border-white/[0.07] p-4 flex items-center gap-3.5 relative overflow-hidden transition-all hover:bg-white/[0.06]">
+  <div className="bg-white/[0.04] rounded-xl border border-white/[0.07] p-3 flex items-center gap-2.5 relative overflow-hidden transition-all hover:bg-white/[0.06]">
     {/* Subtle glow on the icon */}
-    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/[0.05] border border-white/[0.08] shadow-inner">
-      <span className={`material-symbols-outlined text-lg ${accentColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/[0.05] border border-white/[0.08] shadow-inner">
+      <span className={`material-symbols-outlined text-base ${accentColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
     </div>
     <div className="flex-1 min-w-0 flex flex-col justify-center">
-      <div className="text-[9px] text-slate-400 uppercase tracking-[0.2em] mb-1 font-medium">{label}</div>
+      <div className="text-[9px] text-slate-400 uppercase tracking-wider mb-0.5 font-semibold truncate">{label}</div>
       {loading ? (
-        <div className="h-6 w-16 bg-white/5 rounded animate-pulse" />
+        <div className="h-5 w-14 bg-white/5 rounded animate-pulse" />
       ) : error ? (
         <div className="text-xs text-red-400/70">Unavailable</div>
       ) : (
         <div className="flex flex-col">
-          <div className={`text-xl font-headline font-extrabold leading-none tracking-tight ${accentColor}`}>{value}</div>
-          {sub && <div className="text-[9px] text-slate-500 mt-1 font-medium">{sub}</div>}
+          <div className={`text-lg font-headline font-extrabold leading-none tracking-tight ${accentColor}`}>{value}</div>
+          {sub && <div className="text-[9px] text-slate-500 mt-0.5 font-medium">{sub}</div>}
         </div>
       )}
     </div>

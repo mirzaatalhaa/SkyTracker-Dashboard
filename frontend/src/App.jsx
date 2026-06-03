@@ -8,6 +8,7 @@ import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard.js
 import { useWeather } from './hooks/useWeather';
 import { useKochiTraffic } from './hooks/useKochiTraffic';
 import airportData from './data/airportData.json';
+import { SmoothCursor } from './components/ui/SmoothCursor';
 
 // Kochi (COK) airspace definition
 const KOCHI_AIRSPACE = {
@@ -100,7 +101,6 @@ function App() {
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const aircraftRefs = useRef(new Map());
-  const cursorGlowRef = useRef(null);
 
   // Mobile panel state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -123,18 +123,6 @@ function App() {
       setActiveAnalyticsTab(null);
     }
   }, [selectedFlight, isMobile]);
-
-  // Mouse-following blue hue (desktop only)
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (cursorGlowRef.current) {
-        cursorGlowRef.current.style.background =
-          `radial-gradient(150px circle at ${e.clientX}px ${e.clientY}px, rgba(162,201,255,0.18), transparent 60%)`;
-      }
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   // Progressive batch loading
   useEffect(() => {
@@ -162,6 +150,29 @@ function App() {
 
   const renderedFlights = useMemo(() => flights.slice(0, visibleCount), [flights, visibleCount]);
   const handleFlightClick = useCallback((flight) => setSelectedFlight(flight), []);
+
+  // Close every panel at once (used by backdrop tap)
+  const handleCloseAllPanels = useCallback(() => {
+    setIsSidebarOpen(false);
+    setIsTrafficOpen(false);
+    setActiveAnalyticsTab(null);
+  }, []);
+
+  // Toggle one panel — opening it closes all others (single-panel-at-a-time)
+  const handlePanelToggle = useCallback((panel) => {
+    const isOpen =
+      panel === 'sidebar'  ? isSidebarOpen  :
+      panel === 'traffic'  ? isTrafficOpen  :
+      activeAnalyticsTab === panel;
+    setIsSidebarOpen(false);
+    setIsTrafficOpen(false);
+    setActiveAnalyticsTab(null);
+    if (!isOpen) {
+      if      (panel === 'sidebar')  setIsSidebarOpen(true);
+      else if (panel === 'traffic')  setIsTrafficOpen(true);
+      else                           setActiveAnalyticsTab(panel);
+    }
+  }, [isSidebarOpen, isTrafficOpen, activeAnalyticsTab]);
 
   // Dead reckoning base positions
   useEffect(() => {
@@ -252,29 +263,20 @@ function App() {
         />
         {/* Edge vignette */}
         <div className="absolute inset-0 pointer-events-none z-10" style={{ boxShadow: 'inset 0 0 150px 60px rgba(0,0,0,0.5)' }} />
-        {/* Mouse-following blue hue (disabled on mobile touch screens) */}
-        {!isMobile && <div ref={cursorGlowRef} className="absolute inset-0 pointer-events-none z-10" />}
       </div>
 
       {/* ── COK Traffic Panel ── */}
       <KochiTrafficPanel data={kochiTraffic} visible={trafficPanelVisible} isMobile={isMobile} />
 
       {/* ── Analytics Dashboard ── */}
-      {/* Invisible backdrop — closes panel on outside click */}
-      {analyticsPanelVisible && (
-        <div
-          className="fixed inset-0 z-39"
-          style={{ zIndex: 39 }}
-          onClick={() => setActiveAnalyticsTab(null)}
-        />
-      )}
       <AnalyticsDashboard visible={analyticsPanelVisible} isMobile={isMobile} activeTab={activeAnalyticsTab || 'overview'} />
 
-      {/* ── Mobile sidebar backdrop ── */}
-      {isMobile && isSidebarOpen && (
+      {/* ── Unified backdrop — closes ANY open panel when tapping outside ── */}
+      {(analyticsPanelVisible || (isMobile && (isSidebarOpen || isTrafficOpen))) && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm"
-          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-[1px]"
+          style={{ zIndex: 35 }}
+          onClick={handleCloseAllPanels}
         />
       )}
 
@@ -293,27 +295,19 @@ function App() {
       <nav
         className={`fixed z-40 flex flex-col bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)] font-inter text-sm antialiased overflow-hidden transition-all duration-500 ease-out`}
         style={{
-          // Unified sizing and placement
-          width: '16rem',
-          top: isMobile ? '4.5rem' : '50%',
+          // On mobile: slides in from left, never exceeds viewport width
+          width: isMobile ? 'min(16rem, calc(100vw - 2rem))' : '16rem',
+          top: '50%',
           left: '1rem',
           transform: isMobile
-            ? (isSidebarOpen ? 'translateX(0)' : 'translateX(calc(-100% - 1rem))')
+            ? (isSidebarOpen ? 'translateX(0) translateY(-50%)' : 'translateX(calc(-100% - 1rem)) translateY(-50%)')
             : 'translateX(0) translateY(-50%)',
-          maxHeight: isMobile ? 'calc(100vh - 10rem)' : '85vh',
+          maxHeight: isMobile ? '80vh' : '85vh',
           opacity: isMobile ? (isSidebarOpen ? 1 : 0) : 1,
           pointerEvents: isMobile ? (isSidebarOpen ? 'auto' : 'none') : 'none',
         }}
       >
-        {/* Mobile close button */}
-        {isMobile && (
-          <button
-            className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 border border-white/20 text-white/70 hover:text-white pointer-events-auto cursor-pointer"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-sm">close</span>
-          </button>
-        )}
+
 
         {/* Sidebar header */}
         <div className="p-5 pb-4 pointer-events-auto border-b border-white/5 flex-shrink-0">
@@ -409,111 +403,216 @@ function App() {
       </nav>
 
       {/* ── Flight detail panel ── */}
-      <main className={`fixed z-40 font-inter transition-all duration-500 ${isMobile
-        ? 'bottom-20 left-3 right-3'
-        : 'bottom-14 right-6 w-80'
-        } ${selectedFlight ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
-        <div className="bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col pointer-events-auto relative overflow-hidden">
-          {/* Accent line */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h2 className="text-2xl font-headline font-extrabold text-primary-fixed-dim leading-none">{selectedFlight?.callsign || 'UNKNOWN'} - {selectedFlight?.type || ''}</h2>
-              {(() => {
-                const airline = getAirlineFromCallsign(selectedFlight?.callsign);
-                return airline ? (
-                  <p className="text-[11px] font-bold text-sky-400 uppercase tracking-widest mt-1.5">{airline}</p>
-                ) : null;
-              })()}
-              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">{selectedFlight?.country || 'NA'}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5 text-center">
-              <p className="text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">Altitude</p>
-              <p className="text-lg font-headline font-bold text-on-surface leading-none">{Math.round((selectedFlight?.altitude || 0) * 3.28084)}<span className="text-[10px] ml-1 font-normal opacity-40">ft</span></p>
-            </div>
-            <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5 text-center">
-              <p className="text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">Speed</p>
-              <p className="text-lg font-headline font-bold text-on-surface leading-none">{Math.round((selectedFlight?.velocity || 0) * 1.94384)}<span className="text-[10px] ml-1 font-normal opacity-40">kts</span></p>
-            </div>
-            <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5 text-center">
-              <p className="text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">Heading</p>
-              <p className="text-lg font-headline font-bold text-on-surface leading-none">{Math.round(selectedFlight?.true_track || 0)}°</p>
-            </div>
-            <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5 text-center">
-              <p className="text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">Squawk</p>
-              <p className="text-lg font-headline font-bold text-on-surface leading-none">{selectedFlight?.squawk || 'N/A'}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-white/5">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="material-symbols-outlined text-sm text-primary/60">location_on</span>
-              <span className="text-[11px] font-mono text-on-surface-variant">{selectedFlight?.latitude?.toFixed(4)}° N, {selectedFlight?.longitude?.toFixed(4)}° E</span>
-            </div>
-            <button
-              className="w-full py-2.5 bg-gradient-to-r from-primary/80 to-primary-container/60 text-on-primary text-[11px] font-headline font-bold uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-[0.98] hover:shadow-lg hover:shadow-primary/20 cursor-pointer border-none flex items-center justify-center gap-1.5"
+      {/* MOBILE: full-width strip anchored just above the icon nav bar */}
+      {/* DESKTOP: fixed card on the right side */}
+      {isMobile ? (
+        <>
+          {/* Transparent backdrop — tapping outside dismisses the card */}
+          {selectedFlight && (
+            <div
+              className="fixed inset-0"
+              style={{ zIndex: 48 }}
               onClick={() => setSelectedFlight(null)}
-            >
-              <span className="material-symbols-outlined text-sm">close</span>
-              Deselect Flight
-            </button>
+            />
+          )}
+
+          {/* Card */}
+          <div
+            className={`fixed left-0 right-0 font-inter transition-all duration-400 ${
+              selectedFlight ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+            }`}
+            style={{ bottom: '7rem', zIndex: 50 }}
+          >
+            <div className="mx-3 bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] shadow-[0_-8px_40px_rgba(0,0,0,0.5)] pointer-events-auto relative overflow-hidden">
+              {/* Top accent gradient */}
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+              {/* Left accent bar */}
+              <div className="absolute top-0 left-0 bottom-0 w-[2px] bg-gradient-to-b from-primary/60 via-primary/20 to-transparent rounded-l-2xl" />
+
+              {/* Header */}
+              <div className="flex items-start justify-between px-4 pt-3 pb-2 pl-5">
+                <div className="flex-1 min-w-0 pr-3">
+                  {/* Callsign + type */}
+                  <div className="flex items-baseline gap-2 min-w-0">
+                    <h2 className="text-[15px] font-headline font-extrabold text-white leading-none tracking-tight truncate">
+                      {selectedFlight?.callsign || 'UNKNOWN'}
+                    </h2>
+                    {selectedFlight?.type && (
+                      <span className="text-[10px] font-semibold text-on-surface/40 flex-shrink-0">{selectedFlight.type}</span>
+                    )}
+                  </div>
+                  {/* Airline · reg · coords */}
+                  <div className="flex items-center gap-1.5 mt-1 min-w-0 flex-wrap">
+                    {(() => {
+                      const airline = getAirlineFromCallsign(selectedFlight?.callsign);
+                      return airline ? (
+                        <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wide">{airline}</span>
+                      ) : null;
+                    })()}
+                    {selectedFlight?.country && (
+                      <span className="text-[9px] text-on-surface/35 uppercase">· {selectedFlight.country}</span>
+                    )}
+                    <span className="text-on-surface/20 text-[9px]">·</span>
+                    <span className="text-[9px] font-mono text-on-surface/35 truncate">
+                      {selectedFlight?.latitude?.toFixed(3)}°N {selectedFlight?.longitude?.toFixed(3)}°E
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Stats — single row with dividers */}
+              <div className="flex items-stretch border-t border-white/[0.06] divide-x divide-white/[0.06] pb-3 pt-2.5">
+                {[
+                  { label: 'ALT',  value: Math.round((selectedFlight?.altitude || 0) * 3.28084).toLocaleString(), unit: 'ft'  },
+                  { label: 'SPD',  value: Math.round((selectedFlight?.velocity || 0) * 1.94384),                  unit: 'kts' },
+                  { label: 'HDG',  value: `${Math.round(selectedFlight?.true_track || 0)}°`,                      unit: ''    },
+                  { label: 'SQWK', value: selectedFlight?.squawk || 'N/A',                                        unit: ''    },
+                ].map(({ label, value, unit }) => (
+                  <div key={label} className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1">
+                    <span className="text-[7px] font-bold text-on-surface/30 uppercase tracking-widest">{label}</span>
+                    <span className="text-[13px] font-headline font-bold text-on-surface leading-none">
+                      {value}<span className="text-[8px] font-normal opacity-35 ml-0.5">{unit}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
-
-      {/* ── Mobile FABs (floating action buttons) ── */}
-      {isMobile && (
-        <div className="fixed bottom-16 left-0 right-0 z-50 flex justify-between px-4 pointer-events-none">
-          {/* Sidebar toggle */}
-          <button
-            className="pointer-events-auto w-12 h-12 rounded-2xl bg-white/[0.08] backdrop-blur-2xl border border-white/15 shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex items-center justify-center text-on-surface/80 hover:text-white active:scale-95 transition-all duration-200 cursor-pointer"
-            onClick={() => { setIsSidebarOpen(v => !v); setIsTrafficOpen(false); setIsAnalyticsOpen(false); }}
-          >
-            <span className="material-symbols-outlined text-xl">radar</span>
-          </button>
-
-          {/* Traffic panel toggle */}
-          <button
-            className="pointer-events-auto w-12 h-12 rounded-2xl bg-white/[0.08] backdrop-blur-2xl border border-white/15 shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex items-center justify-center text-on-surface/80 hover:text-white active:scale-95 transition-all duration-200 cursor-pointer"
-            onClick={() => { setIsTrafficOpen(v => !v); setIsSidebarOpen(false); setActiveAnalyticsTab(null); }}
-          >
-            <span className="material-symbols-outlined text-xl">connecting_airports</span>
-          </button>
-        </div>
+        </>
+      ) : (
+        /* ── Desktop right-side card (unchanged) ── */
+        <main
+          className={`fixed z-40 font-inter transition-all duration-500 bottom-16 right-6 w-80 ${
+            selectedFlight ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+          }`}
+        >
+          <div className="bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col pointer-events-auto relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+            <div className="flex justify-between items-start mb-4">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-2xl font-headline font-extrabold text-primary-fixed-dim leading-none truncate">
+                  {selectedFlight?.callsign || 'UNKNOWN'} — {selectedFlight?.type || ''}
+                </h2>
+                {(() => {
+                  const airline = getAirlineFromCallsign(selectedFlight?.callsign);
+                  return airline ? <p className="text-[11px] font-bold text-sky-400 uppercase tracking-widest mt-1.5">{airline}</p> : null;
+                })()}
+                <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">{selectedFlight?.country || 'NA'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: 'Altitude', value: `${Math.round((selectedFlight?.altitude || 0) * 3.28084)}`, unit: 'ft' },
+                { label: 'Speed',    value: `${Math.round((selectedFlight?.velocity || 0) * 1.94384)}`, unit: 'kts' },
+                { label: 'Heading',  value: `${Math.round(selectedFlight?.true_track || 0)}°`,          unit: '' },
+                { label: 'Squawk',   value: selectedFlight?.squawk || 'N/A',                            unit: '' },
+              ].map(({ label, value, unit }) => (
+                <div key={label} className="p-3 bg-white/[0.03] rounded-xl border border-white/5 text-center">
+                  <p className="text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">{label}</p>
+                  <p className="text-lg font-headline font-bold text-on-surface leading-none">
+                    {value}<span className="text-[10px] ml-1 font-normal opacity-40">{unit}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-sm text-primary/60">location_on</span>
+                <span className="text-[11px] font-mono text-on-surface-variant">
+                  {selectedFlight?.latitude?.toFixed(4)}° N, {selectedFlight?.longitude?.toFixed(4)}° E
+                </span>
+              </div>
+              <button
+                className="w-full py-2.5 bg-gradient-to-r from-primary/80 to-primary-container/60 text-on-primary text-[11px] font-headline font-bold uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-[0.98] hover:shadow-lg hover:shadow-primary/20 cursor-pointer border-none flex items-center justify-center gap-1.5"
+                onClick={() => setSelectedFlight(null)}
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+                Deselect Flight
+              </button>
+            </div>
+          </div>
+        </main>
       )}
 
-      {/* ── Bottom Center Analytics Navbar ── */}
-      <nav className="fixed bottom-12 sm:bottom-14 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)] pointer-events-auto transition-all duration-300">
-        {[
-          { id: 'overview', icon: 'dashboard', label: 'Overview' },
-          { id: 'fleet', icon: 'flight', label: 'Fleet' },
-          { id: 'recent', icon: 'history', label: 'Recent' }
-        ].map(tab => {
-          const isActive = activeAnalyticsTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveAnalyticsTab(isActive ? null : tab.id);
-                setIsSidebarOpen(false);
-                setIsTrafficOpen(false);
-                setSelectedFlight(null); // Close flight details if opening analytics
-              }}
-              className={`flex items-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${isActive ? 'bg-primary/20 text-primary border border-primary/30 shadow-inner' : 'bg-transparent text-on-surface/70 hover:bg-white/5 border border-transparent hover:text-white'}`}
-            >
-              <span className="material-symbols-outlined text-[16px] sm:text-[18px]" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{tab.icon}</span>
-              <span className="text-[10px] sm:text-[11px] font-headline font-bold uppercase tracking-widest">{tab.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+      {/* ── Mobile: unified 5-icon navigation bar (replaces FABs + analytics nav) ── */}
+      {isMobile && !selectedFlight && (
+        <nav
+          className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 p-1 bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-auto"
+          style={{ bottom: 'calc(2rem + 0.5rem)' }}
+        >
+          {[
+            { id: 'sidebar',  icon: 'radar' },
+            { id: 'traffic',  icon: 'connecting_airports' },
+            { id: 'overview', icon: 'dashboard' },
+            { id: 'fleet',    icon: 'flight' },
+            { id: 'recent',   icon: 'history' },
+          ].map(({ id, icon }) => {
+            const isActive =
+              id === 'sidebar'  ? isSidebarOpen  :
+              id === 'traffic'  ? isTrafficOpen  :
+              activeAnalyticsTab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => handlePanelToggle(id)}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
+                  isActive
+                    ? 'bg-primary/20 text-primary border-primary/30 shadow-inner'
+                    : 'bg-transparent text-on-surface/60 border-transparent hover:bg-white/10 hover:text-white'
+                }`}
+                style={{ minWidth: 40, minHeight: 40 }}
+              >
+                <span
+                  className="material-symbols-outlined text-[18px]"
+                  style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
+                >
+                  {icon}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
+
+      {/* ── Desktop: 3-tab analytics navbar (unchanged) ── */}
+      {!isMobile && (
+        <nav
+          className="fixed left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)] pointer-events-auto transition-all duration-300"
+          style={{ bottom: 'calc(2rem + 0.5rem)' }}
+        >
+          {[
+            { id: 'overview', icon: 'dashboard', label: 'Overview' },
+            { id: 'fleet',    icon: 'flight',    label: 'Fleet'    },
+            { id: 'recent',   icon: 'history',   label: 'Recent'   },
+          ].map(tab => {
+            const isActive = activeAnalyticsTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveAnalyticsTab(isActive ? null : tab.id);
+                  setIsSidebarOpen(false);
+                  setIsTrafficOpen(false);
+                  setSelectedFlight(null);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? 'bg-primary/20 text-primary border border-primary/30 shadow-inner'
+                    : 'bg-transparent text-on-surface/70 hover:bg-white/5 border border-transparent hover:text-white'
+                }`}
+                style={{ minHeight: 40 }}
+              >
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{tab.icon}</span>
+                <span className="text-[11px] font-headline font-bold uppercase tracking-widest">{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {/* ── Footer ── */}
-      <footer className="fixed bottom-0 w-full z-50 flex justify-between items-center px-4 sm:px-8 py-2 sm:py-2.5 bg-white/[0.03] backdrop-blur-xl border-t border-white/5 font-inter text-[9px] sm:text-[10px] tracking-widest uppercase pointer-events-none">
+      <footer className="fixed bottom-0 w-full z-50 flex justify-between items-center px-4 sm:px-8 py-2 sm:py-2.5 bg-white/[0.03] backdrop-blur-xl border-t border-white/5 font-inter text-[9px] sm:text-[10px] tracking-widest uppercase pointer-events-none overflow-hidden">
         <div className="flex items-center gap-3 sm:gap-4 pointer-events-auto">
           <div className="flex items-center gap-2">
 
@@ -531,6 +630,7 @@ function App() {
 
         </div>
       </footer>
+      <SmoothCursor />
     </>
   );
 }

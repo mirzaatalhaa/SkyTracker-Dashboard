@@ -35,7 +35,7 @@ export const AnalyticsDashboard = ({ visible, isMobile, activeTab }) => {
               icon="database"
               label="Total Snapshots"
               value={analytics.flightCount !== null ? analytics.flightCount.toLocaleString() : '—'}
-              sub="rows in flight_snapshots"
+              
               loading={analytics.flightCountLoading}
               error={analytics.flightCountError}
               accentColor="text-primary"
@@ -44,7 +44,7 @@ export const AnalyticsDashboard = ({ visible, isMobile, activeTab }) => {
               icon="category"
               label="Aircraft Types"
               value={!analytics.aircraftTypesLoading && !analytics.aircraftTypesError ? analytics.aircraftTypes.length : '—'}
-              sub="distinct ICAO codes"
+              
               loading={analytics.aircraftTypesLoading}
               error={analytics.aircraftTypesError}
               accentColor="text-tertiary"
@@ -57,7 +57,7 @@ export const AnalyticsDashboard = ({ visible, isMobile, activeTab }) => {
                   ? `${Math.round(analytics.recentFlights.reduce((s, f) => s + (f.speed || 0), 0) / analytics.recentFlights.length)} kts`
                   : '—'
               }
-              sub="recent 20 snapshots"
+              
               loading={analytics.recentFlightsLoading}
               error={analytics.recentFlightsError}
               accentColor="text-emerald-400"
@@ -70,7 +70,6 @@ export const AnalyticsDashboard = ({ visible, isMobile, activeTab }) => {
                   ? `${Math.round(analytics.recentFlights.reduce((s, f) => s + (f.altitude || 0), 0) / analytics.recentFlights.length).toLocaleString()} ft`
                   : '—'
               }
-              sub="recent 20 snapshots"
               loading={analytics.recentFlightsLoading}
               error={analytics.recentFlightsError}
               accentColor="text-secondary"
@@ -103,12 +102,14 @@ export const AnalyticsDashboard = ({ visible, isMobile, activeTab }) => {
       className="fixed z-40 flex flex-col bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.5)] font-inter text-sm antialiased overflow-hidden transition-all duration-500 ease-out"
       style={{
         width: isMobile ? 'calc(100vw - 2rem)' : '24rem',
-        bottom: isMobile ? '6rem' : '7rem',
+        // Sit directly above the analytics navbar
+        // navbar bottom = calc(2rem + 0.5rem), navbar height ~3rem
+        bottom: isMobile ? 'calc(2rem + 0.5rem + 3.25rem + 0.5rem)' : 'calc(2rem + 0.5rem + 3.5rem + 0.5rem)',
         left: '50%',
         transform: visible
           ? 'translateX(-50%) translateY(0) scale(1)'
           : 'translateX(-50%) translateY(20px) scale(0.95)',
-        maxHeight: isMobile ? 'calc(100vh - 12rem)' : '70vh',
+        maxHeight: isMobile ? 'calc(100vh - 4.5rem - 2rem - 3.5rem - 3.5rem - 0.5rem)' : '65vh',
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? 'auto' : 'none',
       }}

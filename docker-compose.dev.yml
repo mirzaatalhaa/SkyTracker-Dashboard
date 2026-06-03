@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: skytracker-postgres
+    container_name: skytracker-postgres-dev
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_dev:/var/lib/postgresql/data
       - ./backend/database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
     restart: unless-stopped
@@ -22,11 +22,15 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: skytracker-backend
+    container_name: skytracker-backend-dev
+    command: npm run dev
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     env_file:
       - ./backend/.env
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3001
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/skytracker
     ports:
@@ -39,12 +43,19 @@ services:
   frontend:
     build:
       context: ./frontend
-    container_name: skytracker-frontend
+      dockerfile: Dockerfile.dev
+    container_name: skytracker-frontend-dev
+    command: npm run dev -- --host 0.0.0.0
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_TARGET=http://backend:3001
     ports:
-      - "80:80"
+      - "5173:5173"
     depends_on:
       - backend
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  postgres_data_dev:

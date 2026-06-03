@@ -17,9 +17,9 @@ const KochiTrafficPanel = ({ data, visible, isMobile = false }) => {
   // Desktop: vertically centered on right edge
   const positionStyle = isMobile
     ? {
-      top: '4.5rem',
+      top: '50%',
       right: '1rem',
-      transform: visible ? 'translateX(0)' : 'translateX(calc(100% + 1rem))',
+      transform: visible ? 'translateX(0) translateY(-50%)' : 'translateX(calc(100% + 1rem)) translateY(-50%)',
     }
     : {
       top: '50%',
@@ -29,10 +29,13 @@ const KochiTrafficPanel = ({ data, visible, isMobile = false }) => {
 
   return (
     <div
-      className="fixed w-56 z-30 font-inter text-sm antialiased transition-all duration-500 ease-out"
+      className="fixed z-40 font-inter text-sm antialiased transition-all duration-500 ease-out"
       style={{
+        width: isMobile ? 'min(14rem, calc(100vw - 2rem))' : '14rem',
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? 'auto' : 'none',
+        maxHeight: isMobile ? 'calc(100vh - 4.5rem - 2rem - 3.5rem - 3.5rem - 1rem)' : 'calc(100vh - 4rem)',
+        overflowY: 'auto',
         ...positionStyle,
       }}
     >

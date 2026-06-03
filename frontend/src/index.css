@@ -183,3 +183,15 @@
 .leaflet-tooltip-right.custom-tooltip::before {
   display: none !important;
 }
+
+/* Hide default cursor on desktop when custom cursor is active */
+@media (min-width: 768px) {
+  html, body, #root, #root * {
+    cursor: none !important;
+  }
+  
+  /* Keep default text selection cursor for inputs */
+  input, textarea, select {
+    cursor: text !important;
+  }
+}
