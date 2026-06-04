@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { MapContainer, TileLayer, useMap, useMapEvents, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { useOpenSky } from './hooks/useOpenSky';
 import { FlightMarker } from './components/FlightMarker';
 import { AirportLayer } from './components/AirportLayer';
@@ -49,7 +49,7 @@ const MapController = ({ selectedFlight, setBounds }) => {
 const getAirlineFromCallsign = (callsign) => {
   if (!callsign) return null;
   const cleanCallsign = callsign.trim().toUpperCase();
-  
+
   const airlineMap = {
     'AIC': 'Air India',
     'AXB': 'Air India Express',
@@ -106,64 +106,65 @@ const ToastItem = ({ alert, onDismiss, onLocate }) => {
   const speedKnots = Math.round((alert.speed || 0) * 1.94384);
 
   return (
-    <div 
-      className="w-72 bg-white/[0.04] backdrop-blur-3xl rounded-xl border border-white/[0.08] shadow-[0_12px_40px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col animate-slide-in pointer-events-auto"
-      style={{ zIndex: 60 }}
+    <div
+      className="w-72 bg-white/[0.06] backdrop-blur-3xl rounded-2xl border border-white/[0.10] shadow-[0_20px_60px_rgba(0,0,0,0.6)] relative overflow-hidden flex flex-col animate-slide-in pointer-events-auto"
     >
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
-      
+      {/* Left accent bar */}
+      <div className="absolute top-0 left-0 bottom-0 w-[2px] bg-gradient-to-b from-amber-400/60 via-amber-400/20 to-transparent rounded-l-2xl" />
+
       {/* Alert Header */}
-      <div className="px-4 pt-3.5 pb-2 flex justify-between items-start">
+      <div className="px-4 pt-3.5 pb-2 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-amber-400 text-base animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>
-            warning
-          </span>
-          <div className="min-w-0">
-            <div className="text-xs font-bold text-amber-300 uppercase tracking-wider">Airspace Entry</div>
+          <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-amber-400 text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>
+              warning
+            </span>
           </div>
+          <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">Airspace Entry</span>
         </div>
-        <button 
+        <button
           onClick={() => onDismiss(alert.id)}
-          className="text-white/40 hover:text-white transition-colors cursor-pointer border-none bg-transparent flex"
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all cursor-pointer border-none bg-transparent flex-shrink-0"
         >
-          <span className="material-symbols-outlined text-[16px]">close</span>
+          <span className="material-symbols-outlined text-[14px]">close</span>
         </button>
       </div>
 
       {/* Flight info */}
-      <div className="px-4 pb-2.5">
-        <div className="flex items-baseline justify-between">
+      <div className="px-4 pb-3">
+        <div className="flex items-baseline gap-2">
           <span className="text-sm font-mono font-extrabold text-white">{alert.callsign}</span>
-          <span className="text-[10px] text-white/50 truncate max-w-[120px]">{alert.type}</span>
+          <span className="text-[10px] text-white/40 font-medium">{alert.type}</span>
         </div>
-        <div className="text-[10px] text-white/40 mt-0.5">
-          Within 50km of COK • {Math.round(alert.distance).toFixed(1)} km out
+        <div className="text-[9px] text-white/30 mt-1">
+          Within 50km of COK · {Math.round(alert.distance)} km out
         </div>
       </div>
 
-      {/* Quick stats & action */}
-      <div className="px-4 pb-3 pt-2.5 border-t border-white/5 flex items-center justify-between">
-        <div className="flex gap-4">
+      {/* Stats row + Locate button */}
+      <div className="px-4 pb-3.5 pt-2.5 border-t border-white/[0.06] flex items-center justify-between gap-3">
+        <div className="flex gap-5">
           <div>
-            <div className="text-[7px] font-bold text-white/30 uppercase tracking-widest">ALT</div>
-            <div className="text-[11px] font-bold text-white leading-none mt-0.5">
-              {altFeet.toLocaleString()}<span className="text-[8px] font-normal opacity-40 ml-0.5">ft</span>
+            <div className="text-[7px] font-bold text-white/25 uppercase tracking-widest">ALT</div>
+            <div className="text-[12px] font-headline font-bold text-white leading-none mt-0.5">
+              {altFeet.toLocaleString()}<span className="text-[8px] font-normal opacity-35 ml-0.5">ft</span>
             </div>
           </div>
           <div>
-            <div className="text-[7px] font-bold text-white/30 uppercase tracking-widest">SPD</div>
-            <div className="text-[11px] font-bold text-white leading-none mt-0.5">
-              {speedKnots}<span className="text-[8px] font-normal opacity-40 ml-0.5">kts</span>
+            <div className="text-[7px] font-bold text-white/25 uppercase tracking-widest">SPD</div>
+            <div className="text-[12px] font-headline font-bold text-white leading-none mt-0.5">
+              {speedKnots}<span className="text-[8px] font-normal opacity-35 ml-0.5">kts</span>
             </div>
           </div>
         </div>
 
-        <button 
+        <button
           onClick={() => onLocate(alert.flight)}
-          className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-colors border border-amber-400/20 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-colors border border-amber-400/20 cursor-pointer flex-shrink-0"
         >
-          <span className="material-symbols-outlined text-[10px]">my_location</span>
+          <span className="material-symbols-outlined text-[12px]">my_location</span>
           Locate
         </button>
       </div>
@@ -250,19 +251,19 @@ function App() {
   // Toggle one panel — opening it closes all others (single-panel-at-a-time)
   const handlePanelToggle = useCallback((panel) => {
     const isOpen =
-      panel === 'sidebar'  ? isSidebarOpen  :
-      panel === 'traffic'  ? isTrafficOpen  :
-      panel === 'history'  ? isHistoryOpen  :
-      activeAnalyticsTab === panel;
+      panel === 'sidebar' ? isSidebarOpen :
+        panel === 'traffic' ? isTrafficOpen :
+          panel === 'history' ? isHistoryOpen :
+            activeAnalyticsTab === panel;
     setIsSidebarOpen(false);
     setIsTrafficOpen(false);
     setIsHistoryOpen(false);
     setActiveAnalyticsTab(null);
     if (!isOpen) {
-      if      (panel === 'sidebar')  setIsSidebarOpen(true);
-      else if (panel === 'traffic')  setIsTrafficOpen(true);
-      else if (panel === 'history')  setIsHistoryOpen(true);
-      else                           setActiveAnalyticsTab(panel);
+      if (panel === 'sidebar') setIsSidebarOpen(true);
+      else if (panel === 'traffic') setIsTrafficOpen(true);
+      else if (panel === 'history') setIsHistoryOpen(true);
+      else setActiveAnalyticsTab(panel);
     }
   }, [isSidebarOpen, isTrafficOpen, isHistoryOpen, activeAnalyticsTab]);
 
@@ -341,7 +342,7 @@ function App() {
 
             // Add to history log
             setAlertHistory(prev => [newAlert, ...prev]);
-            
+
             // Increment unread badge count
             setUnreadCount(prev => prev + 1);
           }
@@ -353,7 +354,7 @@ function App() {
     // Remove if they physically moved out (distance > 50km) or haven't been seen for 45s
     for (const icao of flightsInAirspaceRef.current) {
       const flightInCurrentFeed = flights.find(f => f.icao24 === icao);
-      
+
       if (flightInCurrentFeed) {
         const dist = distanceKm(flightInCurrentFeed.latitude, flightInCurrentFeed.longitude, KOCHI_AIRSPACE.lat, KOCHI_AIRSPACE.lng);
         if (dist > KOCHI_AIRSPACE.radiusKm) {
@@ -409,7 +410,7 @@ function App() {
   // Traffic panel (right) — desktop: visible when no flight is selected (hides when flight detail shows)
   // Analytics panel (center-bottom) — visible only when an analytics tab is selected.
   // On mobile traffic is controlled by its FAB toggle.
-  const trafficPanelVisible = isMobile ? isTrafficOpen : !selectedFlight;
+  const trafficPanelVisible = isMobile ? isTrafficOpen : (!selectedFlight && !isHistoryOpen);
   const analyticsPanelVisible = !!activeAnalyticsTab;
 
   return (
@@ -426,18 +427,7 @@ function App() {
           <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://carto.com/">CARTO</a>' />
           <MapController selectedFlight={selectedFlight} setBounds={setBounds} />
           <AirportLayer airports={airportData} />
-          {/* Subtle dashed amber circle representing the 50km airspace boundary */}
-          <Circle
-            center={[10.1520, 76.3930]}
-            radius={50000} // 50 km in meters
-            pathOptions={{
-              color: 'rgba(245, 158, 11, 0.4)',
-              fillColor: 'rgba(245, 158, 11, 0.02)',
-              fillOpacity: 0.02,
-              weight: 1.5,
-              dashArray: '5, 8',
-            }}
-          />
+
           {renderedFlights.map((flight) => (
             <FlightMarker
               key={flight.icao24}
@@ -484,21 +474,20 @@ function App() {
       </header>
 
       {/* ── Airspace Alerts Bell & History Dropdown ── */}
-      <div className="fixed top-4 right-4 z-50 font-inter">
+      <div className="fixed z-50 font-inter" style={{ top: '1.25rem', right: isMobile ? '1.25rem' : '1.5rem' }}>
         <button
           onClick={handleToggleHistory}
-          className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300 cursor-pointer ${
-            isHistoryOpen
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 shadow-inner'
-              : 'bg-white/[0.04] backdrop-blur-3xl text-white/70 border-white/[0.08] hover:bg-white/10 hover:text-white shadow-lg'
-          }`}
+          className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-300 cursor-pointer backdrop-blur-3xl ${isHistoryOpen
+              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+              : 'bg-white/[0.06] text-white/60 border-white/[0.10] hover:bg-white/10 hover:text-white shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
+            }`}
         >
           <div className="relative">
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: isHistoryOpen ? "'FILL' 1" : "'FILL' 0" }}>
+            <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isHistoryOpen ? "'FILL' 1" : "'FILL' 0" }}>
               notifications
             </span>
             {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-amber-500 text-black text-[9px] font-extrabold flex items-center justify-center shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-amber-500 text-black text-[8px] font-extrabold flex items-center justify-center shadow-[0_0_8px_rgba(245,158,11,0.5)]">
                 {unreadCount}
               </span>
             )}
@@ -507,16 +496,18 @@ function App() {
 
         {/* Alert History Panel */}
         {isHistoryOpen && (
-          <div className="absolute right-0 mt-2 w-80 bg-surface border border-white/[0.08] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col max-h-[400px] z-50">
-            {/* Accent line */}
+          <div className="absolute right-0 mt-2 w-80 bg-white/[0.06] backdrop-blur-3xl rounded-2xl border border-white/[0.10] shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col max-h-[400px]">
+            {/* Top accent line */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
-            
+
             {/* Header */}
-            <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  radar
-                </span>
+                <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-amber-400 text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    radar
+                  </span>
+                </div>
                 <span className="text-amber-300 font-headline font-bold text-xs tracking-tight">Airspace Alert Log</span>
               </div>
               {alertHistory.length > 0 && (
@@ -525,7 +516,7 @@ function App() {
                     setAlertHistory([]);
                     setUnreadCount(0);
                   }}
-                  className="text-[9px] text-white/40 hover:text-white/80 uppercase tracking-widest font-semibold cursor-pointer bg-transparent border-none"
+                  className="text-[8px] text-white/40 hover:text-white/80 uppercase tracking-widest font-semibold cursor-pointer bg-transparent border-none transition-colors"
                 >
                   Clear All
                 </button>
@@ -533,46 +524,46 @@ function App() {
             </div>
 
             {/* Content list */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide py-1 max-h-[320px]">
+            <div className="flex-1 overflow-y-auto scrollbar-hide max-h-[320px]">
               {alertHistory.length === 0 ? (
-                <div className="text-[10px] text-white/40 text-center py-8">
+                <div className="text-[10px] text-white/30 text-center py-8">
                   No alerts in this session
                 </div>
               ) : (
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-white/[0.04]">
                   {alertHistory.map((item) => {
                     const altFt = Math.round((item.altitude || 0) * 3.28084);
                     const spdKts = Math.round((item.speed || 0) * 1.94384);
                     const timeStr = item.timestamp.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    
+
                     return (
-                      <div key={item.id} className="p-3 hover:bg-white/[0.02] transition-colors flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-baseline gap-1.5">
+                      <div key={item.id} className="px-4 py-3 hover:bg-white/[0.03] transition-colors">
+                        {/* Row 1: Callsign + type + timestamp */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-baseline gap-2 min-w-0">
                             <span className="text-xs font-mono font-extrabold text-white">{item.callsign}</span>
-                            <span className="text-[8px] text-white/50 uppercase tracking-wide truncate max-w-[120px]">{item.type}</span>
+                            <span className="text-[8px] text-white/40 font-medium uppercase tracking-wide truncate">{item.type}</span>
                           </div>
-                          <span className="text-[8px] text-white/30 font-mono">{timeStr}</span>
+                          <span className="text-[8px] text-white/25 font-mono flex-shrink-0 ml-2">{timeStr}</span>
                         </div>
-                        
+
+                        {/* Row 2: Stats + Locate button */}
                         <div className="flex items-center justify-between">
-                          <div className="flex gap-3 text-[9px] text-white/50">
-                            <span>Alt: <strong className="text-white/80">{altFt.toLocaleString()} ft</strong></span>
-                            <span>Spd: <strong className="text-white/80">{spdKts} kts</strong></span>
-                            <span>Dist: <strong className="text-white/80">{Math.round(item.distance)} km</strong></span>
+                          <div className="flex gap-3 text-[9px] text-white/40">
+                            <span>Alt: <strong className="text-white/70">{altFt.toLocaleString()} ft</strong></span>
+                            <span>Spd: <strong className="text-white/70">{spdKts} kts</strong></span>
                           </div>
-                          
+
                           <button
                             onClick={() => {
                               setSelectedFlight(item.flight);
-                              // On mobile, close history panel when locating
                               if (isMobile) {
                                 setIsHistoryOpen(false);
                               }
                             }}
-                            className="flex items-center gap-1 px-2 py-1 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 text-[8px] font-bold uppercase tracking-wider rounded transition-colors border border-amber-400/20 cursor-pointer animate-pulse-ring"
+                            className="flex items-center gap-1 px-2.5 py-1 bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 text-[8px] font-bold uppercase tracking-wider rounded-lg transition-colors border border-amber-400/20 cursor-pointer flex-shrink-0 ml-3"
                           >
-                            <span className="material-symbols-outlined text-[9px]">my_location</span>
+                            <span className="material-symbols-outlined text-[10px]">my_location</span>
                             Locate
                           </button>
                         </div>
@@ -587,12 +578,12 @@ function App() {
       </div>
 
       {/* ── Active Toast Notifications ── */}
-      <div 
-        className="fixed z-50 flex flex-col gap-2 pointer-events-none"
+      <div
+        className="fixed z-50 flex flex-col gap-2.5 pointer-events-none"
         style={{
-          top: '5.5rem',
-          right: '1rem',
-          maxWidth: 'min(280px, calc(100vw - 2rem))'
+          top: '4rem',
+          right: isMobile ? '1.25rem' : '1.5rem',
+          width: '18rem'
         }}
       >
         {alerts.map((alert) => (
@@ -735,9 +726,8 @@ function App() {
 
           {/* Card */}
           <div
-            className={`fixed left-0 right-0 font-inter transition-all duration-400 ${
-              selectedFlight ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
-            }`}
+            className={`fixed left-0 right-0 font-inter transition-all duration-400 ${selectedFlight ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
+              }`}
             style={{ bottom: '7rem', zIndex: 50 }}
           >
             <div className="mx-3 bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] shadow-[0_-8px_40px_rgba(0,0,0,0.5)] pointer-events-auto relative overflow-hidden">
@@ -781,10 +771,10 @@ function App() {
               {/* Stats — single row with dividers */}
               <div className="flex items-stretch border-t border-white/[0.06] divide-x divide-white/[0.06] pb-3 pt-2.5">
                 {[
-                  { label: 'ALT',  value: Math.round((selectedFlight?.altitude || 0) * 3.28084).toLocaleString(), unit: 'ft'  },
-                  { label: 'SPD',  value: Math.round((selectedFlight?.velocity || 0) * 1.94384),                  unit: 'kts' },
-                  { label: 'HDG',  value: `${Math.round(selectedFlight?.true_track || 0)}°`,                      unit: ''    },
-                  { label: 'SQWK', value: selectedFlight?.squawk || 'N/A',                                        unit: ''    },
+                  { label: 'ALT', value: Math.round((selectedFlight?.altitude || 0) * 3.28084).toLocaleString(), unit: 'ft' },
+                  { label: 'SPD', value: Math.round((selectedFlight?.velocity || 0) * 1.94384), unit: 'kts' },
+                  { label: 'HDG', value: `${Math.round(selectedFlight?.true_track || 0)}°`, unit: '' },
+                  { label: 'SQWK', value: selectedFlight?.squawk || 'N/A', unit: '' },
                 ].map(({ label, value, unit }) => (
                   <div key={label} className="flex-1 flex flex-col items-center justify-center gap-0.5 px-1">
                     <span className="text-[7px] font-bold text-on-surface/30 uppercase tracking-widest">{label}</span>
@@ -800,9 +790,8 @@ function App() {
       ) : (
         /* ── Desktop right-side card (unchanged) ── */
         <main
-          className={`fixed z-40 font-inter transition-all duration-500 bottom-16 right-6 w-80 ${
-            selectedFlight ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
-          }`}
+          className={`fixed z-40 font-inter transition-all duration-500 bottom-16 right-6 w-80 ${selectedFlight ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+            }`}
         >
           <div className="bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/[0.08] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col pointer-events-auto relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
@@ -821,9 +810,9 @@ function App() {
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: 'Altitude', value: `${Math.round((selectedFlight?.altitude || 0) * 3.28084)}`, unit: 'ft' },
-                { label: 'Speed',    value: `${Math.round((selectedFlight?.velocity || 0) * 1.94384)}`, unit: 'kts' },
-                { label: 'Heading',  value: `${Math.round(selectedFlight?.true_track || 0)}°`,          unit: '' },
-                { label: 'Squawk',   value: selectedFlight?.squawk || 'N/A',                            unit: '' },
+                { label: 'Speed', value: `${Math.round((selectedFlight?.velocity || 0) * 1.94384)}`, unit: 'kts' },
+                { label: 'Heading', value: `${Math.round(selectedFlight?.true_track || 0)}°`, unit: '' },
+                { label: 'Squawk', value: selectedFlight?.squawk || 'N/A', unit: '' },
               ].map(({ label, value, unit }) => (
                 <div key={label} className="p-3 bg-white/[0.03] rounded-xl border border-white/5 text-center">
                   <p className="text-[9px] text-on-surface-variant uppercase tracking-wider mb-1">{label}</p>
@@ -859,25 +848,24 @@ function App() {
           style={{ bottom: 'calc(2rem + 0.5rem)' }}
         >
           {[
-            { id: 'sidebar',  icon: 'radar' },
-            { id: 'traffic',  icon: 'connecting_airports' },
+            { id: 'sidebar', icon: 'radar' },
+            { id: 'traffic', icon: 'connecting_airports' },
             { id: 'overview', icon: 'dashboard' },
-            { id: 'fleet',    icon: 'flight' },
-            { id: 'recent',   icon: 'history' },
+            { id: 'fleet', icon: 'flight' },
+            { id: 'recent', icon: 'history' },
           ].map(({ id, icon }) => {
             const isActive =
-              id === 'sidebar'  ? isSidebarOpen  :
-              id === 'traffic'  ? isTrafficOpen  :
-              activeAnalyticsTab === id;
+              id === 'sidebar' ? isSidebarOpen :
+                id === 'traffic' ? isTrafficOpen :
+                  activeAnalyticsTab === id;
             return (
               <button
                 key={id}
                 onClick={() => handlePanelToggle(id)}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
-                  isActive
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${isActive
                     ? 'bg-primary/20 text-primary border-primary/30 shadow-inner'
                     : 'bg-transparent text-on-surface/60 border-transparent hover:bg-white/10 hover:text-white'
-                }`}
+                  }`}
                 style={{ minWidth: 40, minHeight: 40 }}
               >
                 <span
@@ -900,8 +888,8 @@ function App() {
         >
           {[
             { id: 'overview', icon: 'dashboard', label: 'Overview' },
-            { id: 'fleet',    icon: 'flight',    label: 'Fleet'    },
-            { id: 'recent',   icon: 'history',   label: 'Recent'   },
+            { id: 'fleet', icon: 'flight', label: 'Fleet' },
+            { id: 'recent', icon: 'history', label: 'Recent' },
           ].map(tab => {
             const isActive = activeAnalyticsTab === tab.id;
             return (
@@ -913,11 +901,10 @@ function App() {
                   setIsTrafficOpen(false);
                   setSelectedFlight(null);
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
-                  isActive
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${isActive
                     ? 'bg-primary/20 text-primary border border-primary/30 shadow-inner'
                     : 'bg-transparent text-on-surface/70 hover:bg-white/5 border border-transparent hover:text-white'
-                }`}
+                  }`}
                 style={{ minHeight: 40 }}
               >
                 <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{tab.icon}</span>

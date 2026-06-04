@@ -129,7 +129,7 @@ const KochiTrafficPanel = ({ data, visible, isMobile = false }) => {
                 <div className="px-4 pt-3 pb-2 border-b border-white/5">
                   <div className="text-[8px] text-slate-500 uppercase tracking-[0.2em] mb-2 font-medium">Recent Arrivals</div>
                   <div className="space-y-1">
-                    {recentArrivals.slice(0, 4).map((f, i) => (
+                    {recentArrivals.slice(0, 3).map((f, i) => (
                       <div key={`arr-${i}`} className="flex items-center justify-between py-1">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="material-symbols-outlined text-emerald-400/50 text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -152,7 +152,7 @@ const KochiTrafficPanel = ({ data, visible, isMobile = false }) => {
                 <div className="px-4 pt-3 pb-3">
                   <div className="text-[8px] text-slate-500 uppercase tracking-[0.2em] mb-2 font-medium">Recent Departures</div>
                   <div className="space-y-1">
-                    {recentDepartures.slice(0, 4).map((f, i) => (
+                    {recentDepartures.slice(0, 3).map((f, i) => (
                       <div key={`dep-${i}`} className="flex items-center justify-between py-1">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="material-symbols-outlined text-orange-400/50 text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>
