@@ -31,11 +31,14 @@ const MAX_RENDERED_FLIGHTS = 300;
 const BATCH_SIZE = 50;
 const FRAME_INTERVAL = 1000 / 30;
 
-const MapController = ({ selectedFlight, setBounds }) => {
+const MapController = ({ selectedFlight, setBounds, onMapClick }) => {
   const map = useMap();
   useMapEvents({
     moveend: () => setBounds(map.getBounds()),
-    zoomend: () => setBounds(map.getBounds())
+    zoomend: () => setBounds(map.getBounds()),
+    click: () => {
+      if (onMapClick) onMapClick();
+    }
   });
   useEffect(() => { setBounds(map.getBounds()); }, [map, setBounds]);
   useEffect(() => {
@@ -179,6 +182,7 @@ function App() {
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const aircraftRefs = useRef(new Map());
+  const alertPanelRef = useRef(null);
 
   // Mobile panel state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -203,6 +207,17 @@ function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Close alert panel (history) when clicking anywhere outside it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isHistoryOpen && alertPanelRef.current && !alertPanelRef.current.contains(event.target)) {
+        setIsHistoryOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isHistoryOpen]);
 
   // Close mobile panels when a flight is selected
   useEffect(() => {
@@ -425,7 +440,7 @@ function App() {
           preferCanvas={true}
         >
           <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://carto.com/">CARTO</a>' />
-          <MapController selectedFlight={selectedFlight} setBounds={setBounds} />
+          <MapController selectedFlight={selectedFlight} setBounds={setBounds} onMapClick={() => setIsHistoryOpen(false)} />
           <AirportLayer airports={airportData} />
 
           {renderedFlights.map((flight) => (
@@ -474,7 +489,7 @@ function App() {
       </header>
 
       {/* ── Airspace Alerts Bell & History Dropdown ── */}
-      <div className="fixed z-50 font-inter" style={{ top: '1.25rem', right: isMobile ? '1.25rem' : '1.5rem' }}>
+      <div ref={alertPanelRef} className="fixed z-50 font-inter" style={{ top: '1.25rem', right: isMobile ? '1.25rem' : '1.5rem' }}>
         <button
           onClick={handleToggleHistory}
           className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-300 cursor-pointer backdrop-blur-3xl ${isHistoryOpen
