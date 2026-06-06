@@ -8,11 +8,11 @@ A real-time flight tracking and airport analytics dashboard focused on **Cochin 
 
 | Live Map & Air Traffic Panel | Aircraft Type Distribution |
 |:---:|:---:|
-| ![SkyTracker live map with weather panel and COK traffic](screenshot-main.png) | ![Fleet analytics bar chart of aircraft types by snapshot frequency](screenshot-fleet.png) |
+| ![SkyTracker live map with weather panel and COK traffic](screenshot-main.png) | ![Fleet analytics bar chart of aircraft types by snapshot frequency](screenshot-flight-detail.png) |
 
 | Analytics Overview | Flight Detail Popup |
 |:---:|:---:|
-| ![Analytics dashboard showing 64,115 snapshots, 10 aircraft types](screenshot-analytics.png) | ![Flight detail popup showing AXB2382 B38M Air India Express](screenshot-flight-detail.png) |
+| ![Analytics dashboard showing 64,115 snapshots, 10 aircraft types](screenshot-analytics.png) | ![Flight detail popup showing AXB2382 B38M Air India Express](screenshot-fleet.png) |
 
 ---
 
