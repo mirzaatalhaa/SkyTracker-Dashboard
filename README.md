@@ -6,7 +6,13 @@ A real-time flight tracking and airport analytics dashboard focused on **Cochin 
 
 ## 📸 Preview
 
-> A full-screen interactive map centered on Kochi, Kerala, with live aircraft markers, a weather widget, a COK traffic panel, and an analytics dashboard.
+| Live Map & Air Traffic Panel | Flight Detail Popup |
+|:---:|:---:|
+| ![SkyTracker live map with weather panel and COK traffic](screenshot-main.png) | ![Flight detail popup showing AXB2382 B38M Air India Express](screenshot-flight-detail.png) |
+
+| Analytics Overview | Aircraft Type Distribution |
+|:---:|:---:|
+| ![Analytics dashboard showing 64,115 snapshots, 10 aircraft types](screenshot-analytics.png) | ![Fleet analytics bar chart of aircraft types by snapshot frequency](screenshot-fleet.png) |
 
 ---
 
@@ -186,6 +192,211 @@ npm run dev            # runs at http://localhost:5173
 | `NODE_ENV`        | `development`                                     | Environment mode             |
 | `DATABASE_URL`    | `postgresql://postgres:password@localhost:5432/skytracker` | PostgreSQL connection string |
 | `AVIATIONSTACK_KEY` | _(empty)_                                       | AviationStack API key        |
+
+---
+
+## 📊 Monitoring & Alerting
+
+SkyTracker includes a production-grade monitoring and alerting stack built on **AWS CloudWatch** and **Amazon SNS**, providing full infrastructure visibility and automated operational alerts.
+
+### Overview
+
+| Component | Tool | Purpose |
+|-----------|------|---------|
+| Metrics collection | CloudWatch Agent | CPU, memory, disk, disk I/O |
+| Log aggregation | CloudWatch Logs | `/var/log/syslog` from EC2 |
+| Alarms | CloudWatch Alarms | Threshold-based alerting |
+| Notifications | Amazon SNS + Email | Instant alert delivery |
+
+### Architecture
+
+```
+EC2 Instance (SkyTracker)
+ ├── CloudWatch Agent
+ │    ├── System Metrics → CloudWatch namespace: CWAgent
+ │    │    ├── mem_used_percent
+ │    │    ├── cpu_usage_active
+ │    │    ├── disk_used_percent
+ │    │    └── disk_io_read/write
+ │    └── Log Files → CloudWatch Log Groups
+ │         └── /var/log/syslog
+ └── IAM Role: CloudWatchAgentServerPolicy
+          ↓
+ CloudWatch Alarms
+ ├── High Memory (>80%)  ─┐
+ ├── High CPU (>70%)     ─┼─→ SNS Topic → Email Subscription
+ └── High Disk (>80%)   ─┘
+```
+
+### Setup Instructions
+
+#### 1. Create SNS Topic & Email Subscription
+
+```bash
+# Create the SNS topic
+aws sns create-topic --name skytracker-alerts
+
+# Subscribe your email (replace with your address)
+aws sns subscribe \
+  --topic-arn arn:aws:sns:<region>:<account-id>:skytracker-alerts \
+  --protocol email \
+  --notification-endpoint your@email.com
+```
+
+> Confirm the subscription via the email AWS sends you.
+
+#### 2. Attach IAM Role to EC2
+
+Create and attach an IAM role with the `CloudWatchAgentServerPolicy` managed policy to your EC2 instance:
+
+```bash
+# Create the role
+aws iam create-role \
+  --role-name CloudWatchAgentRole \
+  --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Principal": { "Service": "ec2.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }]
+  }'
+
+# Attach the managed policy
+aws iam attach-role-policy \
+  --role-name CloudWatchAgentRole \
+  --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+# Create instance profile and attach role
+aws iam create-instance-profile --instance-profile-name CloudWatchAgentProfile
+aws iam add-role-to-instance-profile \
+  --instance-profile-name CloudWatchAgentProfile \
+  --role-name CloudWatchAgentRole
+
+# Attach profile to your EC2 instance
+aws ec2 associate-iam-instance-profile \
+  --instance-id <your-instance-id> \
+  --iam-instance-profile Name=CloudWatchAgentProfile
+```
+
+#### 3. Install & Configure CloudWatch Agent
+
+SSH into your EC2 instance:
+
+```bash
+# Install the agent
+wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+
+# Write the agent config
+sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json > /dev/null <<'EOF'
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "cwagent"
+  },
+  "metrics": {
+    "namespace": "CWAgent",
+    "metrics_collected": {
+      "mem":  { "measurement": ["mem_used_percent"] },
+      "disk": { "measurement": ["disk_used_percent", "disk_io_read", "disk_io_write"],
+                "resources": ["/"] },
+      "cpu":  { "measurement": ["cpu_usage_active"],
+                "totalcpu": true }
+    }
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [{
+          "file_path": "/var/log/syslog",
+          "log_group_name": "/skytracker/ec2/syslog",
+          "log_stream_name": "{instance_id}"
+        }]
+      }
+    }
+  }
+}
+EOF
+
+# Start the agent
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
+  -s
+
+# Verify it's running
+sudo systemctl status amazon-cloudwatch-agent
+```
+
+#### 4. Create CloudWatch Alarms
+
+Replace `<REGION>`, `<ACCOUNT_ID>`, and `<INSTANCE_ID>` with your values:
+
+```bash
+SNS_ARN="arn:aws:sns:<REGION>:<ACCOUNT_ID>:skytracker-alerts"
+INSTANCE="<INSTANCE_ID>"
+
+# High memory alarm (>80%)
+aws cloudwatch put-metric-alarm \
+  --alarm-name "SkyTracker-HighMemory" \
+  --alarm-description "Memory usage exceeded 80%" \
+  --metric-name mem_used_percent \
+  --namespace CWAgent \
+  --dimensions Name=InstanceId,Value=$INSTANCE \
+  --statistic Average \
+  --period 300 \
+  --threshold 80 \
+  --comparison-operator GreaterThanThreshold \
+  --evaluation-periods 2 \
+  --alarm-actions $SNS_ARN
+
+# High CPU alarm (>70%)
+aws cloudwatch put-metric-alarm \
+  --alarm-name "SkyTracker-HighCPU" \
+  --alarm-description "CPU utilization exceeded 70%" \
+  --metric-name cpu_usage_active \
+  --namespace CWAgent \
+  --dimensions Name=InstanceId,Value=$INSTANCE \
+  --statistic Average \
+  --period 300 \
+  --threshold 70 \
+  --comparison-operator GreaterThanThreshold \
+  --evaluation-periods 2 \
+  --alarm-actions $SNS_ARN
+
+# High disk alarm (>80%)
+aws cloudwatch put-metric-alarm \
+  --alarm-name "SkyTracker-HighDisk" \
+  --alarm-description "Disk usage exceeded 80%" \
+  --metric-name disk_used_percent \
+  --namespace CWAgent \
+  --dimensions Name=InstanceId,Value=$INSTANCE Name=path,Value=/ \
+  --statistic Average \
+  --period 300 \
+  --threshold 80 \
+  --comparison-operator GreaterThanThreshold \
+  --evaluation-periods 2 \
+  --alarm-actions $SNS_ARN
+```
+
+### Active Alarms
+
+| Alarm | Metric | Threshold | Period | Action |
+|-------|--------|-----------|--------|--------|
+| SkyTracker-HighMemory | `mem_used_percent` | > 80% | 5 min × 2 | SNS Email |
+| SkyTracker-HighCPU | `cpu_usage_active` | > 70% | 5 min × 2 | SNS Email |
+| SkyTracker-HighDisk | `disk_used_percent` | > 80% | 5 min × 2 | SNS Email |
+
+### Verifying Metrics
+
+After setup, confirm metrics appear in CloudWatch:
+
+```bash
+aws cloudwatch list-metrics --namespace CWAgent
+```
+
+You should see `mem_used_percent`, `cpu_usage_active`, and `disk_used_percent` listed under `CWAgent`.
 
 ---
 
