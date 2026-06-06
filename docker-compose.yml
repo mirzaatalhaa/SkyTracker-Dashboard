@@ -41,7 +41,7 @@ services:
       context: ./frontend
     container_name: skytracker-frontend
     ports:
-      - "80:80"
+      - "8000:80"
     depends_on:
       - backend
     restart: unless-stopped
