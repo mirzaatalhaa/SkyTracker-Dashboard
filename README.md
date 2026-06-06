@@ -189,6 +189,63 @@ npm run dev            # runs at http://localhost:5173
 
 ---
 
+## 🚀 CI/CD Pipeline
+
+SkyTracker uses **GitHub Actions** for continuous deployment to an **AWS EC2** instance. Every push to the `master` branch automatically deploys the latest version to production — no manual SSH or deployment commands required.
+
+### How It Works
+
+1. Code is pushed to the `master` branch on GitHub
+2. GitHub Actions triggers the deployment workflow (`.github/workflows/deploy.yml`)
+3. The workflow SSHs into the EC2 instance using stored secrets
+4. It pulls the latest code and rebuilds/restarts all Docker containers via Docker Compose
+
+### Workflow File
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/SkyTracker-Dashboard
+            git pull origin master
+            docker-compose up --build -d
+```
+
+### GitHub Secrets Required
+
+| Secret | Description |
+|--------|-------------|
+| `EC2_HOST` | Public IP address of the EC2 instance |
+| `EC2_USERNAME` | SSH username (e.g., `ubuntu` or `ec2-user`) |
+| `EC2_SSH_KEY` | Private SSH key for authenticating with the EC2 instance |
+
+### Setup Steps
+
+1. **Generate an SSH key pair** on the EC2 instance (or locally) and add the public key to `~/.ssh/authorized_keys` on the server
+2. **Add the three secrets** above to your GitHub repository under *Settings → Secrets and variables → Actions*
+3. **Open port 22** in the EC2 instance's AWS Security Group to allow inbound SSH from GitHub Actions runners
+4. **Push to `master`** — the workflow triggers automatically and deploys within seconds
+
+> **Note:** Ensure the EC2 instance's local repository is in sync with GitHub before enabling the pipeline (resolve any uncommitted local changes via `git stash` or `git reset`).
+
+---
+
 
 
 *Built with ❤️ and focused on Cochin International Airport (COK), Kerala, India.*
