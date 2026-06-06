@@ -13,8 +13,8 @@ jobs:
         uses: appleboy/ssh-action@master
         with: 
           host: ${{ secrets.EC2_HOST}}
-          username: ${{ secrets.EC2_USER}}
-          key: ${{ secrets.EC2_KEY }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/SkyTracker-Dashboard
             git pull origin master
