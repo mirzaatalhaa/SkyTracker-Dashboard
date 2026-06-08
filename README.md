@@ -2,7 +2,7 @@
 
 A real-time flight tracking and airport analytics dashboard focused on **Cochin International Airport (COK)** and its surrounding airspace. SkyTracker displays live aircraft on an interactive map, tracks COK arrivals and departures, shows local weather conditions, and builds historical analytics from continuously collected flight data.
 
-🌐 Live: sky-track.app
+🌐 Live: [sky-track.app](https://sky-track.app)
 
 ---
 
