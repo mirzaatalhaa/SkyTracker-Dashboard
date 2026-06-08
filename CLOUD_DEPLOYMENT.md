@@ -181,4 +181,4 @@ Serving the React SPA from Nginx eliminates the need for a separate reverse prox
 
 ---
 
-> **Live Deployment:** `http://<EC2_PUBLIC_IP>` — hosted on AWS EC2, accessible via public internet.
+
