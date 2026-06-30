@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { runFlightCollection } from './flightCollector.js';
 import { runRetentionCleanup } from './retentionCleaner.js';
+import { refreshTrafficFromApi } from '../services/trafficService.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Scheduler Registry
@@ -13,7 +14,7 @@ import { runRetentionCleanup } from './retentionCleaner.js';
 //   - schedule: cron expression
 //   - handler:  the async function to call
 //   - runOnStart: whether to fire once immediately at server boot
-//                 (useful so you don't wait 2 min for first data)
+//                 (useful so you don't wait for the next tick for first data)
 // ─────────────────────────────────────────────────────────────────────────────
 const JOBS = [
   {
@@ -30,6 +31,18 @@ const JOBS = [
     //         └────────── minute 0 = top of the hour
     handler: runRetentionCleanup,
     runOnStart: false, // No need to run cleanup immediately on startup
+  },
+  {
+    // ── Daily AviationStack Traffic Refresh ──────────────────────────────────
+    // Fetches COK arrivals + departures once per day (2 API calls total).
+    // The budget gate inside refreshTrafficFromApi() ensures we never exceed
+    // MAX_DAILY_API_CALLS even if the scheduler fires unexpectedly.
+    //
+    // Schedule: 6:00 AM IST = 00:30 UTC (IST is UTC+5:30)
+    name: 'Daily AviationStack Traffic Refresh',
+    schedule: '30 0 * * *', // 00:30 UTC = 06:00 IST
+    handler: () => refreshTrafficFromApi({ source: 'scheduled-daily-refresh' }),
+    runOnStart: true,  // Populate cache immediately on server boot
   },
 ];
 

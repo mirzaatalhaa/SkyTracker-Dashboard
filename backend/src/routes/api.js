@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getHealth } from '../controllers/healthController.js';
 import { getFlights } from '../controllers/flightController.js';
-import { getTraffic } from '../controllers/trafficController.js';
+import { getTraffic, refreshTraffic } from '../controllers/trafficController.js';
 import { getWeather } from '../controllers/weatherController.js';
 import { 
   getRecentFlights, 
@@ -20,6 +20,11 @@ router.get('/flights', getFlights);
 
 // COK Traffic (AviationStack)
 router.get('/traffic/cok', getTraffic);
+
+// Manual Traffic Refresh (Admin-only)
+// NOTE: No auth middleware applied yet. In production, protect this route
+// with authentication (e.g. API key header, JWT, or session check).
+router.post('/traffic/cok/refresh', refreshTraffic);
 
 // COK Weather (Open-Meteo)
 router.get('/weather/cok', getWeather);

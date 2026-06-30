@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 
-// AviationStack via Vercel Serverless Function Proxy
-// This solves the Mixed Content (HTTP vs HTTPS) issue on Vercel
+// ─────────────────────────────────────────────────────────────────────────────
+// IMPORTANT: This hook polls the backend cache every 10 minutes via
+// GET /api/v1/traffic/cok. It NEVER triggers an AviationStack API call.
+// The backend serves cached data exclusively. AviationStack is only called
+// by the server's scheduled daily refresh job (see backend/src/jobs/scheduler.js).
+//
+// Do NOT "optimize" this by adding direct AviationStack calls from the frontend.
+// The AviationStack free tier has a strict 100 calls/month quota.
+// ─────────────────────────────────────────────────────────────────────────────
 
 const CACHE_KEY = 'cok_traffic_cache_v2';
 const FETCH_INTERVAL = 10 * 60 * 1000; // Refresh every 10 minutes
